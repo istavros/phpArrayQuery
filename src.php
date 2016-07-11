@@ -37,12 +37,74 @@ class Collection extends ArrayIterator implements iCollection {
   }
 
   public static function from($array) {
+
+    if ($array instanceof Generator) {
+      return new GeneratorItterator($array);
+    }
+
     return new Collection($array);
   }
 
   public function toArray() {
     return $this->getArrayCopy();
   }
+}
+
+class GeneratorItterator implements Iterator, iCollection {
+  protected $generator;
+
+  public function __construct(Generator $gen) {
+    $this->generator = $gen;
+  }
+
+  public function select($callback) {
+    return new SelectIterator($this, $callback);
+  }
+
+  public function where($callback) {
+    return new WhereIterator($this, $callback);
+  }
+
+  public function distinct($callback) {
+    return new DistinctIterator($this, $callback);
+  }
+
+  public function first($item_count = 1) {
+    return new FirstIterator($this, $item_count);
+  }
+
+  public function last($item_count = 1) {
+    return new LastIterator($this, $item_count);
+  }
+
+  public function toArray() {
+    $tmp = array();
+    foreach ($this as $key => $value) {
+      $tmp[$key] = $value;
+    }
+    return $tmp;
+  }
+
+  public function current () {
+    return $this->generator->current();
+  }
+
+  public function key () {
+    return $this->generator->key();
+  }
+
+  public function next () {
+    $this->generator->next();
+  }
+
+  public function rewind () {
+    $this->generator->rewind();
+  }
+
+  public function valid () {
+    return $this->generator->valid();
+  }
+
 }
 
 class SelectIterator extends IteratorIterator implements iCollection{
